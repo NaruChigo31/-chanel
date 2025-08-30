@@ -1,6 +1,6 @@
 const express = require('express')
 const cors = require('cors');
-const { Posts, Boards, Admins } = require("../db.js")
+const { Posts, Boards, Admins, Users } = require("../db.js")
 const fs = require("fs");
 const multer = require("multer");
 const path = require("path");

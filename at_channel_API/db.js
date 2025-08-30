@@ -64,7 +64,7 @@ const Boards = sequelize.define("Boards",{
     }
 })
 
-const Posts = sequelize.define("Discusions",{
+const Posts = sequelize.define("Posts",{
     // id:{
     //     type: DataTypes.INTEGER,
     //     primaryKey: true

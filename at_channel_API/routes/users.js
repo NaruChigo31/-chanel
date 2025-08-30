@@ -60,7 +60,6 @@ router.post("/admin", async (req, res) => {
     let yourApikey = req.headers.apikey
     
     if (!yourApikey){
-        // console.log(yourApikey)
         return res.status(403).json({code:403, error: "Yo, where is your apikey?"})
     } 
     isAdminCheck(yourApikey, res, async()=>{
@@ -90,7 +89,6 @@ router.post("/admin", async (req, res) => {
 
 
 router.delete("/admin/:id", async(req, res) =>{
-    const { body } = req
 
     let yourApikey = req.headers.apikey
     if (!yourApikey){

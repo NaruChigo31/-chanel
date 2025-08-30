@@ -1,6 +1,5 @@
 const express = require('express')
 const cors = require('cors');
-const { Users, Admins } = require("./db.js")
 
 const usersRoute = require('./routes/users.js')
 const boardsRoute = require('./routes/boards.js')
