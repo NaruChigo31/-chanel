@@ -71,7 +71,7 @@ const Posts = sequelize.define("Posts",{
     // },
     title:{
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
         unique: false
     },
     text:{
@@ -110,6 +110,11 @@ const Posts = sequelize.define("Posts",{
         unique: false
     },
     isPinned:{
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+        unique: false
+    },
+    isSpoiler:{
         type: DataTypes.BOOLEAN,
         allowNull: true,
         unique: false

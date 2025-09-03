@@ -281,6 +281,7 @@ router.post("/:tag/thread", upload.single("file"), async (req, res) =>{
             fileOrigName: req.file.originalname,
             fileSavedName: req.file.filename,
             isPinned: false,
+            isSpoiler: body.isSpoiler || false,
             creatorId: user.dataValues.id
         })
         // console.log(thread)
@@ -292,7 +293,7 @@ router.post("/:tag/thread", upload.single("file"), async (req, res) =>{
         //         console.log("created")
         //     }
         // })
-        return res.status(200).json({file: req.file, thread})
+        return res.status(200).json({code:200, file: req.file, thread})
 
     } catch(error){
         console.error(error)
@@ -300,7 +301,7 @@ router.post("/:tag/thread", upload.single("file"), async (req, res) =>{
     }
 })
 
-router.post("/:tag/thread", upload.single("file"), async (req, res) =>{
+router.post("/:tag/thread/:threadId/reply", upload.single("file"), async (req, res) =>{
 
     let { body } = req
 
@@ -327,42 +328,44 @@ router.post("/:tag/thread", upload.single("file"), async (req, res) =>{
     if(!board){
         return res.status(404).json({ code: 404, error: "Oops, looks like there's no board found" })
     }
+
+    let thread = await Posts.findOne({
+        where: {
+            id: req.params.threadId
+        }
+    })
+    if(!thread){
+        return res.status(404).json({ code: 404, error: "Oops, looks like there's no thread found" })
+    }
     
-    if(!req.file){
-        return res.status(400).json({ code: 400, error: "You must include file in the thread op post" })
-    }
-    if(!body.title){
-        return res.status(400).json({ code: 400, error: "Where's title" })
-    }
+
     if(!body.text){
         return res.status(400).json({ code: 400, error: "Where's text" })
-    }    
+    }  
+    let postAnswerIDs = null
+    if(body.postAnswerIDs){
+        postAnswerIDs = JSON.parse(body.postAnswerIDs)
+        console.log(postAnswerIDs)
+    }
 
 
     try{
 
-        let thread = await Posts.create({
-            title: body.title,
+        let reply = await Posts.create({
+            title: null,
             text: body.text,
             boardId: board.dataValues.id,
-            threadId: null,
-            postAnswerIDs: body.postAnswerIDs || null,
+            threadId: req.params.threadId,
+            postAnswersIDs: postAnswerIDs || null,
             userName: body.userName || null,
-            fileOrigName: req.file.originalname,
-            fileSavedName: req.file.filename,
+            fileOrigName: req.file ? req.file.originalname : null,
+            fileSavedName: req.file ? req.file.filename : null,
             isPinned: false,
+            isSpoiler: body.isSpoiler || false,
             creatorId: user.dataValues.id
         })
-        // console.log(thread)
-        // fs.mkdir(`uploads/${thread.dataValues.id}`, {recursive:true}, function(err){
-        //     if (err){
-        //         console.error(err)
-        //     }
-        //     else{
-        //         console.log("created")
-        //     }
-        // })
-        return res.status(200).json({file: req.file, thread})
+
+        return res.status(200).json({code:200, reply})
 
     } catch(error){
         console.error(error)
