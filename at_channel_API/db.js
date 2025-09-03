@@ -72,7 +72,7 @@ const Posts = sequelize.define("Posts",{
     title:{
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true
+        unique: false
     },
     text:{
         type: DataTypes.TEXT,
@@ -84,19 +84,29 @@ const Posts = sequelize.define("Posts",{
         allowNull: false,
         unique: false
     },
+    threadId:{
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        unique: false
+    },
     postAnswersIDs:{
         type: DataTypes.ARRAY(DataTypes.INTEGER),
         allowNull: true,
         unique: false
     },
-    name:{
+    userName:{
         type: DataTypes.STRING,
         allowNull: true,
         unique: false
     },
-    file:{
+    fileOrigName:{
         type: DataTypes.TEXT,
-        allowNull: false,
+        allowNull: true,
+        unique: false
+    },
+    fileSavedName:{
+        type: DataTypes.TEXT,
+        allowNull: true,
         unique: false
     },
     isPinned:{
@@ -104,14 +114,9 @@ const Posts = sequelize.define("Posts",{
         allowNull: true,
         unique: false
     },
-    CreatorID:{
+    creatorId:{
         type: DataTypes.INTEGER,
         allowNull: false,
-        unique: false
-    },
-    Password:{
-        type: DataTypes.STRING,
-        allowNull: true,
         unique: false
     }
 })
@@ -125,13 +130,32 @@ Admins.belongsTo(Users, {
     onDelete: "CASCADE"
 })
 
+Users.hasMany(Posts,{
+    foreignKey:{
+        name:"creatorId",
+        allowNull: false
+    }
+})
+Posts.belongsTo(Users,{
+    foreignKey:{
+        name:"creatorId",
+        allowNull: false
+    }
+})
+
+
 Boards.hasMany(Posts,{
     foreignKey: {
         name:"boardId",
         allowNull: false
     }
 })
-Posts.belongsTo(Boards)
+Posts.belongsTo(Boards,{
+    foreignKey: {
+        name:"boardId",
+        allowNull: false
+    }
+})
 
 
 // sequelize.sync()

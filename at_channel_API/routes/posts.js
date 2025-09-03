@@ -34,13 +34,13 @@ async function isAdminCheck(apikey, res, cb){
     }).then( (you)=>{        
         console.log(you)
         if(!you){
-            return res.status(403).json({code:403, error: "There's no such an apikey in database"})
+            return res.status(404).json({code:404, error: "There's no such an apikey in database"})
         } 
         Admins.findOne({
             where: {userId: you.dataValues.id}
         }).then((youAdmin)=>{
             if(!youAdmin){
-                return res.status(404).json({code:403, error: "You're not admin"})
+                return res.status(403).json({code:403, error: "You're not admin"})
             }  
             // console.log(youAdmin)
             cb()
@@ -88,13 +88,23 @@ router.get("/:boardId/:page",async (req, res) => {
     }
 })
 
-router.post("/", async (req, res)=>{
-    try{
+// router.post("/op/:boardId", async (req, res)=>{
 
-    } catch(error) {
-            console.error(error)
-            return res.status(500).json({ code:500, error: "Oops, error ocured" })
-    }
+//     let yourApikey = req.headers.apikey
+//     if (!yourApikey){
+//         return res.status(403).json({code:403, error: "Yo, where is your apikey?"})
+//     } 
+
+//     try{
+
+//     } catch(error) {
+//             console.error(error)
+//             return res.status(500).json({ code:500, error: "Oops, error ocured" })
+//     }
+// })
+
+router.post("/answer/:boardId", async (req, res)=>{
+    return res.status(200).json({ code: 404, req: req.query })
 })
 
 module.exports = router;

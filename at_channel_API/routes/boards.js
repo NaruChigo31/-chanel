@@ -1,10 +1,34 @@
 const express = require('express')
-const { Boards, Users, Admins } = require("../db.js")
-
+const { Boards, Users, Admins, Posts } = require("../db.js")
 const cors = require('cors');
+const fs = require("fs")
+
+
+
+const multer = require("multer")
+const path = require("path")
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, `uploads`)
+  },
+  filename: (req, file, cb) => {
+
+    // console.log("hiha-hiha-hiha-hiha-hiha-hiha-hiha-hiha-hiha-hiha-hiha-hiha-hiha-hiha-hiha-hiha-hiha-hiha")
+    // console.log(req.params.tag)
+    // // console.log(res)
+    // console.log("huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh")
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+    let newFileName = uniqueSuffix  + '-' + file.originalname
+    cb(null, newFileName )
+    // cb(null, file.originalname)
+  }
+})
+
+const upload = multer({ storage: storage })
+
 
 const spacesInText = [" ","\n","\t"]
-
 
 const router = express.Router()
 
@@ -17,15 +41,15 @@ async function isAdminCheck(apikey, res, cb){
     Users.findOne({
         where:{ apikey: apikey }
     }).then( (you)=>{        
-        console.log(you)
+        // console.log(you)
         if(!you){
-            return res.status(403).json({code:403, error: "There's no such an apikey in database"})
+            return res.status(404).json({code:404, error: "There's no such an apikey in database"})
         } 
         Admins.findOne({
             where: {userId: you.dataValues.id}
         }).then((youAdmin)=>{
             if(!youAdmin){
-                return res.status(404).json({code:403, error: "You're not admin"})
+                return res.status(403).json({code:403, error: "You're not admin"})
             }  
             // console.log(youAdmin)
             cb()
@@ -37,6 +61,8 @@ function filterSpaces(field){
     return field.split("").filter((element) => !spacesInText.includes(element))
 }
 
+// just about boards
+
 
 router.post("/", async (req, res) =>{
     let apikey = req.headers.apikey
@@ -46,13 +72,26 @@ router.post("/", async (req, res) =>{
     isAdminCheck(apikey, res, async()=>{
         try{
             let { body } = req
+
+            if (!body.tag){
+                return res.status(400).json({ code:400, error:"Where is the tag?" })
+            }
+            if (!body.topic){
+                return res.status(400).json({ code:400, error:"Where is the topic?" })
+            }
+            if (!body.description){
+                return res.status(400).json({ code:400, error:"Where is the description?" })
+            }
+
             const tag = body.tag.trim().toLowerCase()
             const topic = body.topic.trim()
             const description = body.description.trim()
 
-            if(!tag || filterSpaces(tag).length < 1){
+
+            if(filterSpaces(tag).length < 1){
                 return res.status(400).json({ code:400, error:"Tag is at least 1 symbol" })
             }
+            
             else if (tag.trim().split(" ").length > 1){
                 return res.status(400).json({ code:400, error:"Tag is 1 word only" })
             }
@@ -61,16 +100,22 @@ router.post("/", async (req, res) =>{
             }
 
 
-            if(!topic || filterSpaces(topic).length < 1){
+            if(filterSpaces(topic).length < 1){
                 return res.status(400).json({ code:400, error:"Where is the topic?" })
             }
-
-
-            if(!description || filterSpaces(topic).length < 1){
+            if(filterSpaces(topic).length < 1){
                 return res.status(400).json({ code:400, error:"Where is the description?" })
             }
 
+            let boardExists = await Boards.findOne({
+                where:{
+                    tag: tag
+                }
+            })
 
+            if(boardExists){
+                return res.status(201).json({ code:201,  message:`Board /${tag}/ - ${boardExists.dataValues.topic} already exists`})
+            }
 
             let board = await Boards.create({
                 tag: tag,
@@ -146,7 +191,7 @@ router.put("/:tag", async (req, res) =>{
     isAdminCheck(apikey, res, async()=>{
         try{
             const prevTag = req.params.tag
-            console.log(prevTag.length)
+            // console.log(prevTag.length)
             let board = await Boards.findOne({
                 where:{
                     tag : prevTag
@@ -178,6 +223,188 @@ router.put("/:tag", async (req, res) =>{
             return res.status(500).json({ code:500, error: "Oops, error ocured" })
         }
     })
+
+})
+
+
+// about threads and posts on the board
+
+
+router.post("/:tag/thread", upload.single("file"), async (req, res) =>{
+
+    let { body } = req
+
+    let yourApikey = req.headers.apikey
+
+    if (!yourApikey){
+        return res.status(403).json({code:403, error: "Yo, where is your apikey?"})
+    } 
+
+    let user = await Users.findOne({
+        where: {
+            apikey: yourApikey
+        }
+    })
+    if(!user){
+        return res.status(404).json({ code: 404, error: "Oops, looks like there's no user found" })
+    }
+
+    let board = await Boards.findOne({
+        where: {
+            tag: req.params.tag
+        }
+    })
+    if(!board){
+        return res.status(404).json({ code: 404, error: "Oops, looks like there's no board found" })
+    }
+    
+    if(!req.file){
+        return res.status(400).json({ code: 400, error: "You must include file in the thread op post" })
+    }
+    if(!body.title){
+        return res.status(400).json({ code: 400, error: "Where's title" })
+    }
+    if(!body.text){
+        return res.status(400).json({ code: 400, error: "Where's text" })
+    }    
+
+
+    try{
+
+        let thread = await Posts.create({
+            title: body.title,
+            text: body.text,
+            boardId: board.dataValues.id,
+            threadId: null,
+            postAnswerIDs: body.postAnswerIDs || null,
+            userName: body.userName || null,
+            fileOrigName: req.file.originalname,
+            fileSavedName: req.file.filename,
+            isPinned: false,
+            creatorId: user.dataValues.id
+        })
+        // console.log(thread)
+        // fs.mkdir(`uploads/${thread.dataValues.id}`, {recursive:true}, function(err){
+        //     if (err){
+        //         console.error(err)
+        //     }
+        //     else{
+        //         console.log("created")
+        //     }
+        // })
+        return res.status(200).json({file: req.file, thread})
+
+    } catch(error){
+        console.error(error)
+        return res.status(500).json({ code:500, error: "Oops, error ocured" })
+    }
+})
+
+router.post("/:tag/thread", upload.single("file"), async (req, res) =>{
+
+    let { body } = req
+
+    let yourApikey = req.headers.apikey
+
+    if (!yourApikey){
+        return res.status(403).json({code:403, error: "Yo, where is your apikey?"})
+    } 
+
+    let user = await Users.findOne({
+        where: {
+            apikey: yourApikey
+        }
+    })
+    if(!user){
+        return res.status(404).json({ code: 404, error: "Oops, looks like there's no user found" })
+    }
+
+    let board = await Boards.findOne({
+        where: {
+            tag: req.params.tag
+        }
+    })
+    if(!board){
+        return res.status(404).json({ code: 404, error: "Oops, looks like there's no board found" })
+    }
+    
+    if(!req.file){
+        return res.status(400).json({ code: 400, error: "You must include file in the thread op post" })
+    }
+    if(!body.title){
+        return res.status(400).json({ code: 400, error: "Where's title" })
+    }
+    if(!body.text){
+        return res.status(400).json({ code: 400, error: "Where's text" })
+    }    
+
+
+    try{
+
+        let thread = await Posts.create({
+            title: body.title,
+            text: body.text,
+            boardId: board.dataValues.id,
+            threadId: null,
+            postAnswerIDs: body.postAnswerIDs || null,
+            userName: body.userName || null,
+            fileOrigName: req.file.originalname,
+            fileSavedName: req.file.filename,
+            isPinned: false,
+            creatorId: user.dataValues.id
+        })
+        // console.log(thread)
+        // fs.mkdir(`uploads/${thread.dataValues.id}`, {recursive:true}, function(err){
+        //     if (err){
+        //         console.error(err)
+        //     }
+        //     else{
+        //         console.log("created")
+        //     }
+        // })
+        return res.status(200).json({file: req.file, thread})
+
+    } catch(error){
+        console.error(error)
+        return res.status(500).json({ code:500, error: "Oops, error ocured" })
+    }
+})
+
+// in progress
+router.get("/:tag/thread", async (req, res) =>{
+        
+    let board = await Boards.findOne({
+        where:{
+            tag: req.params.tag 
+        }
+    })
+    if (!board){
+        return res.status(404).json({code:404, error: "There's no such a page"})
+    }
+    
+
+    let page = Number(req.query.page) || 1
+    const limit = 15
+    const offset = (page-1)*limit
+
+    let threads
+    
+    if(req.query.all){
+        threads = await Users.findAll()
+    } else{
+        threads = await Posts.findAll({
+            where:{
+                boardId: board.dataValues.id
+            },
+            offset: offset,
+            limit: limit
+        })
+
+        for (let thread of threads){
+            console.log(thread.dataValues.id)
+        }
+    }
+
 
 })
 
