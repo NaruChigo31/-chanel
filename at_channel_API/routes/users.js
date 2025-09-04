@@ -70,22 +70,28 @@ router.post("/admin", async (req, res) => {
     } 
     isAdminCheck(yourApikey, res, async()=>{
 
+        if(!name){
+            return res.status(400).json({ code: 400, error: "Where's name?" })
+        }  
+        if(!password){
+            return res.status(400).json({ code: 400, error: "Where's password?" })
+        }  
+
         let apikey = uuidv4()
         // let password = crypto.randomBytes(10).toString("hex")
         try{
+            if(!name){
+                return res.status(400).json({ code:400, error:"Where is the name?" })
+            }
+            if(!password){
+                return res.status(400).json({ code:400, error:"Where is the password, dude?" })
+            }
+
+            
             let user = await Users.create({
                 apikey: apikey
             })
 
-            // console.log(user)
-
-            if(!name){
-                return res.status(400).json({ code:400, error:"Where is the name?" })
-            }
-        
-            if(!password){
-                return res.status(400).json({ code:400, error:"Where is the password, dude?" })
-            }
 
             let admin = await Admins.create({
                 userId: user.dataValues.id,

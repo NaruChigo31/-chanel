@@ -112,12 +112,20 @@ const Posts = sequelize.define("Posts",{
     isPinned:{
         type: DataTypes.BOOLEAN,
         allowNull: true,
-        unique: false
+        unique: false,
+        defaultValue: false
     },
     isSpoiler:{
         type: DataTypes.BOOLEAN,
-        allowNull: true,
-        unique: false
+        allowNull: false,
+        unique: false,
+        defaultValue: false
+    },
+    isArchived:{
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        unique: false,
+        defaultValue: false
     },
     creatorId:{
         type: DataTypes.INTEGER,

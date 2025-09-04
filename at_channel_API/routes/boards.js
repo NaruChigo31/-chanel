@@ -2,7 +2,7 @@ const express = require('express')
 const { Boards, Users, Admins, Posts } = require("../db.js")
 const cors = require('cors');
 const fs = require("fs")
-
+const { Op } = require("sequelize");
 
 
 const multer = require("multer")
@@ -62,7 +62,6 @@ function filterSpaces(field){
 }
 
 // just about boards
-
 
 router.post("/", async (req, res) =>{
     let apikey = req.headers.apikey
@@ -229,7 +228,6 @@ router.put("/:tag", async (req, res) =>{
 
 // about threads and posts on the board
 
-
 router.post("/:tag/thread", upload.single("file"), async (req, res) =>{
 
     let { body } = req
@@ -360,7 +358,7 @@ router.post("/:tag/thread/:threadId/reply", upload.single("file"), async (req, r
             userName: body.userName || null,
             fileOrigName: req.file ? req.file.originalname : null,
             fileSavedName: req.file ? req.file.filename : null,
-            isPinned: false,
+            // isPinned: false,
             isSpoiler: body.isSpoiler || false,
             creatorId: user.dataValues.id
         })
@@ -382,7 +380,7 @@ router.get("/:tag/thread", async (req, res) =>{
         }
     })
     if (!board){
-        return res.status(404).json({code:404, error: "There's no such a page"})
+        return res.status(404).json({code:404, error: "There's no such a board"})
     }
     
 
@@ -390,25 +388,92 @@ router.get("/:tag/thread", async (req, res) =>{
     const limit = 15
     const offset = (page-1)*limit
 
-    let threads
+    let threads = {}
+    let threadsFound
     
-    if(req.query.all){
-        threads = await Users.findAll()
-    } else{
-        threads = await Posts.findAll({
+    if(req.query.catalog){
+        threadsFound = await Posts.findAll({
             where:{
-                boardId: board.dataValues.id
+                boardId: board.dataValues.id,
+                isArchived: false,
+                threadId: null
+            }
+        })
+        console.log(threadsFound)
+        if(threadsFound.length < 1){
+            return res.status(404).json({code:404, error: "There's no threads on board"})
+        }
+
+        for (let thread of threadsFound){
+
+            let repliesCount = await Posts.count({
+                where:{
+                    threadId: thread.dataValues.id
+                }
+            })
+            let imagesCount = await Posts.count({
+                where:{
+                    threadId: thread.dataValues.id,
+                    fileOrigName: {
+                        [Op.not]: null
+                    }
+                }
+            })
+
+            threads[thread.dataValues.id] = {
+                thread: thread,
+                repliesCount: repliesCount,
+                imagesCount: imagesCount
+            }
+        }
+
+    } else{
+        threadsFound = await Posts.findAll({
+            where:{
+                boardId: board.dataValues.id,
+                isArchived: false,
+                threadId: null
             },
             offset: offset,
             limit: limit
         })
+        if(threadsFound.length < 1){
+            return res.status(404).json({code:404, error: "There's no threads on board"})
+        }
 
-        for (let thread of threads){
-            console.log(thread.dataValues.id)
+        for (let thread of threadsFound){
+            let last5Replies = await Posts.findAll({
+                where:{
+                    threadId: thread.dataValues.id
+                },
+                limit: 5,
+                order: [['createdAt', 'DESC']]
+            })
+
+            let repliesCount = await Posts.count({
+                where:{
+                    threadId: thread.dataValues.id
+                }
+            })
+            let imagesCount = await Posts.count({
+                where:{
+                    threadId: thread.dataValues.id,
+                    fileOrigName: {
+                        [Op.not]: null
+                    }
+                }
+            })
+
+            threads[thread.dataValues.id] = {
+                thread: thread,
+                repliesCount: repliesCount,
+                imagesCount: imagesCount,
+                replies: last5Replies
+            }
         }
     }
 
-
+    return res.status(200).json({ code:200, threads: threads })
 })
 
 module.exports = router;
