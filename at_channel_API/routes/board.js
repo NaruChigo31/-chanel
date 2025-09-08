@@ -331,6 +331,9 @@ router.post("/:tag/thread/:threadId/reply", upload.single("file"), async (req, r
     if(!thread){
         return res.status(404).json({ code: 404, error: "Oops, looks like there's no thread found" })
     }
+    if(thread.dataValues.isClosed){
+        return res.status(404).json({ code: 404, error: "Oops, looks like this thread is closed" })
+    }
     
 
     if(!body.text){

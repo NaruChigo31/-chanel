@@ -156,4 +156,42 @@ router.put("/:threadId/pin/:choice", async (req, res) =>{
 
 })
 
+router.put("/:threadId/close/:choice", async (req, res) =>{
+
+    let yourApikey = req.headers.apikey
+    if (!yourApikey){
+        return res.status(403).json({code:403, error: "Yo, where is your apikey?"})
+    } 
+    isAdminCheck(yourApikey, res, async()=>{
+        
+        const choice = req.params.choice === "true"
+        
+        if (req.params.choice != "false" && !choice){
+            return res.status(400).json({code:400, error: "There must be boolean value"}) 
+        }
+
+        thread = await Posts.findOne({
+            where:{
+                id: req.params.threadId,
+                threadId: null
+            }
+        })
+        if (!thread){
+            return res.status(404).json({code:404, error: "There's no thread with this id"})
+        }
+
+        thread.isClosed = choice
+        await thread.save()
+
+        let notice = `Thread ${req.params.threadId} at /${thread.dataValues.boardId}/ is closed`
+
+        if (!choice){
+            notice = `Thread ${req.params.threadId} at /${thread.dataValues.boardId}/ is no longer closed`
+        }
+        return res.status(200).json({ code:200, notice})
+
+    })
+
+})
+
 module.exports = router;

@@ -17,9 +17,6 @@ router.use(express.urlencoded({ extended: true }));
 router.use(cors());
 
 
-
-
-
 async function isAdminCheck(apikey, res, cb){
     let you = await Users.findOne({
         where:{ apikey: apikey }
@@ -52,7 +49,6 @@ router.post("/", async (req, res) => {
     }
 
 })
-
 
 router.post("/admin", async (req, res) => {
     let { body } = req
@@ -103,7 +99,6 @@ router.post("/admin", async (req, res) => {
 
 })
 
-
 router.delete("/admin/:id", async(req, res) =>{
 
     let yourApikey = req.headers.apikey
@@ -136,7 +131,6 @@ router.delete("/admin/:id", async(req, res) =>{
         return res.status(204).json({ code:204, notice: `${name} no longer is admin now`})
     })
 })
-
 
 router.post("/auth", async(req, res) => {
     const { body } = req
@@ -171,7 +165,6 @@ router.post("/auth", async(req, res) => {
         return res.status(404).json({ code: 404, error: "Oops, who are you bro?" })
     }
 })
-
 
 router.get("/", async(req, res) => {
 
@@ -212,7 +205,6 @@ router.get("/", async(req, res) => {
 
 })
 
-
 router.get("/:id", async(req, res) => {
 
     let yourApikey = req.headers.apikey
@@ -238,7 +230,6 @@ router.get("/:id", async(req, res) => {
     })
 
 })
-
 
 router.delete("/:id", async (req, res) => {
 

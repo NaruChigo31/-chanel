@@ -127,6 +127,12 @@ const Posts = sequelize.define("Posts",{
         unique: false,
         defaultValue: false
     },
+    isClosed:{
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        unique: false,
+        defaultValue: false
+    },
     creatorId:{
         type: DataTypes.INTEGER,
         allowNull: false,
