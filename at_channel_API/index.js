@@ -2,17 +2,17 @@ const express = require('express')
 const cors = require('cors');
 const path = require("path")
 
-const usersRoute = require('./routes/users.js')
-const boardsRoute = require('./routes/boards.js')
-const postsRoute = require('./routes/posts.js')
+const userRoute = require('./routes/user.js')
+const boardRoute = require('./routes/board.js')
+const threadRoute = require('./routes/thread.js')
 
 
 const app = express()
 const port = 3000
 
-app.use('/users', usersRoute)
-app.use('/boards', boardsRoute)
-app.use('/posts', postsRoute)
+app.use('/user', userRoute)
+app.use('/board', boardRoute)
+app.use('/thread', threadRoute)
 
 
 app.get("/",(req, res)=>{

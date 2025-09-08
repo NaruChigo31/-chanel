@@ -1,15 +1,39 @@
+// I actually decided to use await variant for consistency
+
+
+// async function isAdminCheck(apikey, res, cb){
+//     let you = await Users.findOne({
+//         where:{ apikey: apikey }
+//     })
+//     if(!you){
+//         return res.status(403).json({code:403, error: "There's no such a dude in database"})
+//     } 
+//     let youAdmin = await Admins.findOne({
+//         where: {userId: you.dataValues.id}
+//     })
+//     if(!youAdmin){
+//         return res.status(404).json({code:403, error: "You're not admin"})
+//     }  
+//     cb()
+// }
+
+
 async function isAdminCheck(apikey, res, cb){
-    let you = await Users.findOne({
+    Users.findOne({
         where:{ apikey: apikey }
+    }).then( (you)=>{        
+        // console.log(you)
+        if(!you){
+            return res.status(404).json({code:404, error: "There's no such an apikey in database"})
+        } 
+        Admins.findOne({
+            where: {userId: you.dataValues.id}
+        }).then((youAdmin)=>{
+            if(!youAdmin){
+                return res.status(403).json({code:403, error: "You're not admin"})
+            }  
+            // console.log(youAdmin)
+            cb()
+        })
     })
-    if(!you){
-        return res.status(403).json({code:403, error: "There's no such a dude in database"})
-    } 
-    let youAdmin = await Admins.findOne({
-        where: {userId: you.dataValues.id}
-    })
-    if(!youAdmin){
-        return res.status(404).json({code:403, error: "You're not admin"})
-    }  
-    cb()
 }

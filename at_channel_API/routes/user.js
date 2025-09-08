@@ -21,23 +21,19 @@ router.use(cors());
 
 
 async function isAdminCheck(apikey, res, cb){
-    Users.findOne({
+    let you = await Users.findOne({
         where:{ apikey: apikey }
-    }).then( (you)=>{        
-        console.log(you)
-        if(!you){
-            return res.status(404).json({code:404, error: "There's no such an apikey in database"})
-        } 
-        Admins.findOne({
-            where: {userId: you.dataValues.id}
-        }).then((youAdmin)=>{
-            if(!youAdmin){
-                return res.status(403).json({code:403, error: "You're not admin"})
-            }  
-            // console.log(youAdmin)
-            cb()
-        })
     })
+    if(!you){
+        return res.status(403).json({code:403, error: "There's no such a dude in database"})
+    } 
+    let youAdmin = await Admins.findOne({
+        where: {userId: you.dataValues.id}
+    })
+    if(!youAdmin){
+        return res.status(404).json({code:404, error: "You're not admin"})
+    }  
+    cb()
 }
 
 
@@ -137,7 +133,7 @@ router.delete("/admin/:id", async(req, res) =>{
         // user is deleted only after admin, due to foreign key configuration
         // user can't be deleted if it's id is in Admins userId
         user.destroy()
-        return res.status(200).json({ code:200, notice: `${name} no longer is admin now`})
+        return res.status(204).json({ code:204, notice: `${name} no longer is admin now`})
     })
 })
 

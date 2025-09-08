@@ -38,23 +38,19 @@ router.use(cors());
 
 
 async function isAdminCheck(apikey, res, cb){
-    Users.findOne({
+    let you = await Users.findOne({
         where:{ apikey: apikey }
-    }).then( (you)=>{        
-        // console.log(you)
-        if(!you){
-            return res.status(404).json({code:404, error: "There's no such an apikey in database"})
-        } 
-        Admins.findOne({
-            where: {userId: you.dataValues.id}
-        }).then((youAdmin)=>{
-            if(!youAdmin){
-                return res.status(403).json({code:403, error: "You're not admin"})
-            }  
-            // console.log(youAdmin)
-            cb()
-        })
     })
+    if(!you){
+        return res.status(403).json({code:403, error: "There's no such a dude in database"})
+    } 
+    let youAdmin = await Admins.findOne({
+        where: {userId: you.dataValues.id}
+    })
+    if(!youAdmin){
+        return res.status(404).json({code:404, error: "You're not admin"})
+    }  
+    cb()
 }
 
 function filterSpaces(field){
@@ -173,7 +169,7 @@ router.delete("/:tag", async (req, res) =>{
             const topic = board.dataValues.topic
             board.destroy()
         
-            return res.status(200).json({ code:200, message:`yo, board /${tag}/ - ${topic} is deleted` })
+            return res.status(204).json({ code:204, message:`yo, board /${tag}/ - ${topic} is deleted` })
         } catch(error){
             console.error(error)
             return res.status(500).json({ code:500, error: "Oops, error ocured" })
@@ -371,7 +367,6 @@ router.post("/:tag/thread/:threadId/reply", upload.single("file"), async (req, r
     }
 })
 
-// in progress
 router.get("/:tag/thread", async (req, res) =>{
         
     let board = await Boards.findOne({
@@ -399,7 +394,6 @@ router.get("/:tag/thread", async (req, res) =>{
                 threadId: null
             }
         })
-        console.log(threadsFound)
         if(threadsFound.length < 1){
             return res.status(404).json({code:404, error: "There's no threads on board"})
         }
@@ -475,5 +469,6 @@ router.get("/:tag/thread", async (req, res) =>{
 
     return res.status(200).json({ code:200, threads: threads })
 })
+
 
 module.exports = router;
