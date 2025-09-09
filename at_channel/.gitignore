@@ -3,7 +3,7 @@
 # dependencies
 node_modules
 
-./../at_hcannel_API/uploads
+./../at_hcannel_API/public
 
 /node_modules
 /.pnp

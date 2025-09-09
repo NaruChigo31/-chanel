@@ -1,10 +1,8 @@
 const express = require('express')
 const cors = require('cors');
 const { Users, Admins } = require("../db.js")
-const crypto = require("crypto");
 const { v4: uuidv4 } = require('uuid');
-// const { DataTypes } = require('sequelize');
-
+const bcrypt = require("bcrypt")
 
 const router = express.Router()
 
@@ -15,6 +13,7 @@ router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
 // to send data as strings and arrays
 router.use(cors());
+
 
 
 async function isAdminCheck(apikey, res, cb){
@@ -32,7 +31,6 @@ async function isAdminCheck(apikey, res, cb){
     }  
     cb()
 }
-
 
 
 router.post("/", async (req, res) => {
@@ -61,15 +59,7 @@ router.post("/admin", async (req, res) => {
         return res.status(403).json({code:403, error: "Yo, where is your apikey?"})
     } 
     isAdminCheck(yourApikey, res, async()=>{
-
-        if(!name){
-            return res.status(400).json({ code: 400, error: "Where's name?" })
-        }  
-        if(!password){
-            return res.status(400).json({ code: 400, error: "Where's password?" })
-        }  
-
-        let apikey = uuidv4()
+        
         // let password = crypto.randomBytes(10).toString("hex")
         try{
             if(!name){
@@ -78,17 +68,20 @@ router.post("/admin", async (req, res) => {
             if(!password){
                 return res.status(400).json({ code:400, error:"Where is the password, dude?" })
             }
-
             
+            let apikey = uuidv4()
+            const saltRounds = 10
+            const salt = await bcrypt.genSalt(saltRounds)
+            const passHashed = await bcrypt.hash(password, salt)
+
             let user = await Users.create({
                 apikey: apikey
             })
 
-
-            let admin = await Admins.create({
+            await Admins.create({
                 userId: user.dataValues.id,
-                name: body.name,
-                password: body.password
+                name: name,
+                password: passHashed
             })
             return res.status(201).json({ code:201, apikey: user.apikey, notice:"New admin has been added" })
         } catch(error) {
@@ -145,12 +138,18 @@ router.post("/auth", async(req, res) => {
         return res.status(400).json({ code:400, error:"Where is the password, dude?" })
     }
 
+
     const admin = await Admins.findOne({
         where:{
-            name:name,
-            password: password
+            name:name
         }
     })
+
+    const checkPass = await bcrypt.compare(password, admin.dataValues.password)
+
+    if (!checkPass){
+        return res.status(403).json({ code:403, error:"The password is wrong" })
+    }
 
     const user = await Users.findOne({
         where:{
@@ -162,7 +161,7 @@ router.post("/auth", async(req, res) => {
     if (user){
         return res.status(200).json({ code:200, apikey: user.apikey })
     } else{
-        return res.status(404).json({ code: 404, error: "Oops, who are you bro?" })
+        return res.status(404).json({ code: 404, error: "Oops, this user does not exist" })
     }
 })
 

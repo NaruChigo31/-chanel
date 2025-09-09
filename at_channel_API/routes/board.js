@@ -10,14 +10,10 @@ const path = require("path")
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, `uploads`)
+    cb(null, `./public`)
   },
   filename: (req, file, cb) => {
 
-    // console.log("hiha-hiha-hiha-hiha-hiha-hiha-hiha-hiha-hiha-hiha-hiha-hiha-hiha-hiha-hiha-hiha-hiha-hiha")
-    // console.log(req.params.tag)
-    // // console.log(res)
-    // console.log("huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh-huh")
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
     let newFileName = uniqueSuffix  + '-' + file.originalname
     cb(null, newFileName )
