@@ -1,5 +1,4 @@
 const express = require('express')
-const cors = require('cors');
 const { Users, Admins } = require("../db.js")
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require("bcrypt")
@@ -12,7 +11,7 @@ router.use(express.json());
 // to send data as json object
 router.use(express.urlencoded({ extended: true }));
 // to send data as strings and arrays
-router.use(cors());
+// router.use(cors());
 
 
 

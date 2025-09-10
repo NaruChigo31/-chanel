@@ -1,5 +1,4 @@
 const express = require('express')
-const cors = require('cors');
 const { Posts, Admins, Users } = require("../db.js")
 
 // router
@@ -8,7 +7,7 @@ const router = express.Router()
 
 router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
-router.use(cors());
+// router.use(cors());
 
 async function isAdminCheck(apikey, res, cb){
     let you = await Users.findOne({

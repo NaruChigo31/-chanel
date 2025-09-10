@@ -1,6 +1,5 @@
 const express = require('express')
 const { Boards, Users, Admins, Posts } = require("../db.js")
-const cors = require('cors');
 const fs = require("fs")
 const { Op } = require("sequelize");
 
@@ -30,7 +29,7 @@ const router = express.Router()
 
 router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
-router.use(cors());
+// router.use(cors());
 
 
 async function isAdminCheck(apikey, res, cb){
@@ -129,7 +128,7 @@ router.get("/", async (req, res) =>{
     if (boards.length <= 0){
         return res.status(404).json({code:404, error: "There's no boards"})
     }
-    return res.status(200).json({code:200, boards: boards})
+    return res.status(200).json({code:200, boards})
 })
 
 router.get("/:tag", async (req, res)=>{

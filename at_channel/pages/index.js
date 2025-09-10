@@ -1,23 +1,66 @@
+"use client"
+
 import Image from "next/image";
 import Link from 'next/link'
-import styles from "./page.module.css";
+import styles from "./index.module.css";
+import "../app/globals.css";
+import { useState, useEffect } from 'react';
 
-var fs = require('fs');
+const apiUrl = 'http://localhost:3000'
+
+// export const getServerSideProps = (async ()=>{
+//   const res = await fetch(`${apiUrl}/getMenuGif`);
+//   const data = await res.json();
+// })
 
 export default function Home() {
 
-  let files = fs.readdirSync('./public/mainGifs');
-  let rdIdx = Math.floor(Math.random() * files.length)
-  let gif = files[rdIdx]
-  console.log(gif)
+  const [boards, setBoards] = useState()
+  const [gif, setGif] = useState()
+
+  function getGifs(){
+    fetch(`${apiUrl}/getMenuGif`,{
+      method: "GET"
+    })
+    .then(res => res.json())
+    .then(
+      async (data) => {
+        setGif(`${apiUrl}/${await data}`)
+      }
+    )
+  }
+  
+  function getBoards(){
+    fetch(`${apiUrl}/board`,{
+      method: "GET"
+    })
+    .then((res)=>(res.json()))
+    .then(
+      async (data) =>{
+        if(!data.error){
+          setBoards(await data.boards)
+          console.log(data)
+        } else{
+          console.error(data.error)
+          // throw Error("No data")
+        }
+      }
+    )
+  }
+
+
+  useEffect(() =>{getGifs()},[])
+  useEffect(() =>{getBoards()},[])
 
   return (
     <main>
       <header>
-        <h2>@Channel</h2>
+          <h2>@Channel</h2>
       </header>
       <div className={styles.main}>
-        <img className={styles.mainGif} src={`/mainGifs/${gif}`} alt="Some anime girl gif"/>
+        { gif &&
+          <img className={styles.mainGif} src={`${gif}`} alt="Some anime girl gif"/>
+        }
 
         <h1>Wellcome user :3</h1>
         <div className={styles.infoNavigation}>
@@ -46,14 +89,19 @@ export default function Home() {
             <div className={styles.infoNavTitle}>
               <h4>Boards</h4>
             </div>
+            { boards &&
             <div className={styles.navContent}>
-              <Link href="/a">/a/ - anime</Link>
-              <Link href="/b">/b/ - random</Link>
+                {boards.map((board, idx) =>{
+                  return (
+                    <Link key={idx} href={board.tag}>/{board.tag}/ - {board.topic}</Link>
+                  )
+                })}
+              {/* <Link href="/b">/b/ - random</Link>
               <Link href="/v">/v/ - Video Games</Link>
               <Link href="/e">/e/ - Ecchi</Link>
-              <Link href="/pash">/pash/ - pashtet lore</Link>
+              <Link href="/pash">/pash/ - pashtet lore</Link> */}
             </div>
-
+            } 
             <div className={styles.infoNavTitle}>
               <h4>Extra info</h4>
             </div>
@@ -68,7 +116,7 @@ export default function Home() {
         </div>
       </div>
       <footer>
-        <h2>@channel by freeCum comp.</h2>
+          <h2>@channel by freeCum comp.</h2>
       </footer>
     </main>
   );
