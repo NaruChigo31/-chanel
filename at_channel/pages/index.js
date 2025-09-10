@@ -1,4 +1,4 @@
-"use client"
+// "use client"
 
 import Image from "next/image";
 import Link from 'next/link'
@@ -6,7 +6,10 @@ import styles from "./index.module.css";
 import "../app/globals.css";
 import { useState, useEffect } from 'react';
 
-const apiUrl = 'http://localhost:3000'
+
+
+const apiUrl = 'http://localhost:8000'
+// const apiUrl = process.env.API_URL
 
 // export const getServerSideProps = (async ()=>{
 //   const res = await fetch(`${apiUrl}/getMenuGif`);
@@ -84,7 +87,7 @@ export default function Home() {
           </div>
 
           <div className={styles.navigation}>
-            <img className={styles.logoImage} src="logo.png" alt="logo"/>
+            {/* <img className={styles.logoImage} src="logo.png" alt="logo"/> */}
 
             <div className={styles.infoNavTitle}>
               <h4>Boards</h4>

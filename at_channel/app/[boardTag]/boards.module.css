@@ -1,0 +1,19 @@
+.tagInHeader{
+    color: #FFFBEF;
+    font-size: 24px;
+    font-weight: 400;
+    text-decoration: none;
+}
+
+.boardMain{
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: center;
+    padding: 30px 0;
+    gap: 15px;
+}
+
+.boardGif{
+    height: 170px;
+}

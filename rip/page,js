@@ -1,0 +1,136 @@
+'use client'
+
+import styles from "./boards.module.css";
+import "../globals.css";
+
+import Link from 'next/link'
+
+import { useRouter } from 'next/router';
+import { useState, useEffect, use } from 'react';
+import { useParams } from 'next/navigation'
+
+const apiUrl = 'http://localhost:8000'
+
+
+// export async function generateStaticParams() {
+  
+//   const boards = fetch(`${apiUrl}/getMenuGif`,{method: "GET"})
+//   .then(res => res.json())
+//   .then(
+//     async (data) => {
+//       return`${apiUrl}/${await data}`
+//     }
+//   )
+
+//   return boards.map((board) => ({
+//     boardTag: board.tag,
+//   }));
+// }
+
+
+
+
+export default function Page() {
+
+  const params = useParams()
+  console.log(params)
+
+  const {boardTag} = params
+
+  const [board, setBoard] = useState()
+  const [boardList, setBoardList] = useState()
+  const [threads, setThreads] = useState()
+  const [gif, setGif] = useState()
+
+  function getGifs(){
+    fetch(`${apiUrl}/getMenuGif`,{
+      method: "GET"
+    })
+    .then(res => res.json())
+    .then(
+      async (data) => {
+        setGif(`${apiUrl}/${await data}`)
+      }
+    )
+  }
+
+  function getBoardList(){
+    fetch(`${apiUrl}/board`,{
+      method: "GET"
+    })
+    .then((res)=>(res.json()))
+    .then(
+      async(data)=>{
+        if(!data.error){
+          setBoardList(await data.boards)
+          console.log(data)
+        } else{
+          console.error(data.error)
+          // throw Error("No data")
+        }
+      }
+    )
+  }
+
+  function getBoard(){
+    fetch(`${apiUrl}/board/${boardTag}`,{
+      method: "GET"
+    })
+    .then((res)=>(res.json()))
+    .then(
+      async(data)=>{
+        if(!data.error){
+          setBoard(await data.board)
+          console.log(data)
+        } else{
+          console.error(data.error)
+          // throw Error("No data")
+        }
+      }
+    )
+  }
+
+  function getThreads(){
+    fetch(`${apiUrl}/board/${boardTag}/thread`,{
+      method: "GET"
+    })
+    .then((res)=>(res.json()))
+    .then(
+      async(data)=>{
+        if(!data.error){
+          setThreads(await data.threads)
+          console.log(data)
+        } else{
+          console.error(data.error)
+          // throw Error("No data")
+        }
+      }
+    )
+  }
+
+  useEffect(() =>{getGifs()},[])
+  useEffect(() =>{getBoardList()},[])
+  useEffect(() =>{getBoard()},[])
+  useEffect(() =>{getThreads()},[])
+
+  return (
+    <main>
+      <header>
+        <h2>@Channel</h2>
+        { boardList &&
+          <p className={styles.tagInHeader}>[ {boardList.map((board, idx) =>{
+              return(
+                <Link className={styles.tagInHeader} key={idx} href={board.tag}>{board.tag}/ </Link>
+              )
+          })} ]</p>
+        }
+      </header>
+      <div className={styles.boardMain}>
+        { gif &&
+          <img className={styles.boardGif} src={`${gif}`} alt="Some anime girl gif"/>
+        }
+        <h1>board - {boardTag}</h1>
+      </div>
+    </main>
+  )
+}
